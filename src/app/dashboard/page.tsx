@@ -69,16 +69,16 @@ export default function Dashboard() {
     setGenerating(true)
     try {
       const params: GenerationParams = {
-        mainMeatCount: values.mainMeatCount,
-        halfMeatCount: values.halfMeatCount,
-        vegetarianCount: values.vegetarianCount,
-        staffSituation: values.staffSituation,
-        historicalRatio: values.historicalRatio,
-        equipmentShortage: values.equipmentShortage || [],
-        spicyLevel: values.spicyLevel,
-        flavorDiversity: values.flavorDiversity || false,
-        workRatio: values.workRatio,
-        ingredientDiversity: values.ingredientDiversity,
+        mainMeatCount: values.mainMeatCount as number,
+        halfMeatCount: values.halfMeatCount as number,
+        vegetarianCount: values.vegetarianCount as number,
+        staffSituation: values.staffSituation as 'abundant' | 'scarce',
+        historicalRatio: values.historicalRatio as number,
+        equipmentShortage: (values.equipmentShortage as string[]) || [],
+        spicyLevel: values.spicyLevel as 'none' | 'mild' | 'medium',
+        flavorDiversity: (values.flavorDiversity as boolean) || false,
+        workRatio: values.workRatio as string,
+        ingredientDiversity: values.ingredientDiversity as string,
       }
 
       const response = await fetch('/api/generate-menu', {

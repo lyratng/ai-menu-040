@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     })
 
     // 返回成功响应（不包含密码）
-    const { password: _, ...canteenData } = canteen
+    const { password: _pwd, ...canteenData } = canteen
     return NextResponse.json({
       success: true,
       canteen: canteenData,

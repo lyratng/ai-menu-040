@@ -10,7 +10,7 @@ import {
   FileTextOutlined, CalendarOutlined
 } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import type { WeekMenu } from '@/types'
+import type { WeekMenu, GenerationParams } from '@/types'
 
 const { Header, Content } = Layout
 const { Title, Text, Paragraph } = Typography
@@ -23,7 +23,7 @@ interface HistoryData {
   generatedMenus: Array<{
     id: string
     weekMenu: WeekMenu
-    generationParams: object
+    generationParams: GenerationParams
     createdAt: string
   }>
 }
@@ -32,10 +32,6 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
   const [data, setData] = useState<HistoryData | null>(null)
   const router = useRouter()
-
-  useEffect(() => {
-    fetchHistoryMenus()
-  }, [fetchHistoryMenus])
 
   const fetchHistoryMenus = useCallback(async () => {
     try {
@@ -55,6 +51,10 @@ export default function HistoryPage() {
       setLoading(false)
     }
   }, [router])
+
+  useEffect(() => {
+    fetchHistoryMenus()
+  }, [fetchHistoryMenus])
 
   const goBack = () => {
     router.push('/dashboard')

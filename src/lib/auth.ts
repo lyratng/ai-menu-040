@@ -43,7 +43,6 @@ export async function authenticateCanteen(canteenName: string, password: string)
   }
 
   // 返回除密码外的所有数据
-  const { password: _password, ...canteenData } = canteen
-  void _password // 显式标记为已使用
+  const { password: _, ...canteenData } = canteen
   return canteenData
 }

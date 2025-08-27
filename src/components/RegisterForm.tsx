@@ -39,12 +39,22 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
           const worksheet = workbook.Sheets[sheetName]
           const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
           
-          // 提取菜名（假设第一列是菜名，过滤空值）
-          const dishes = jsonData
-            .slice(1) // 跳过表头
-            .map((row: any) => row[0])
-            .filter((dish: any) => dish && typeof dish === 'string' && dish.trim() !== '')
-            .map((dish: string) => dish.trim())
+          // 提取所有菜名（5列，无表头，提取所有非空菜名）
+          const dishes: string[] = []
+          
+          // 遍历所有行和列，提取所有菜名
+          jsonData.forEach((row: any) => {
+            if (Array.isArray(row)) {
+              // 遍历每行的所有列（A-E列，即索引0-4）
+              for (let colIndex = 0; colIndex < 5; colIndex++) {
+                const dish = row[colIndex]
+                // 过滤空值并清理数据
+                if (dish && typeof dish === 'string' && dish.trim() !== '') {
+                  dishes.push(dish.trim())
+                }
+              }
+            }
+          })
 
           setHistoricalMenus(prev => [...prev, dishes])
           message.success(`文件 ${file.name} 解析成功，提取到 ${dishes.length} 道菜品`)

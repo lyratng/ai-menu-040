@@ -1,0 +1,41 @@
+// This is your Prisma schema file for production,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Canteen {
+  id            String   @id @default(cuid())
+  canteenName   String   @unique
+  password      String
+  hotDishCount  Int      @default(8)
+  coldDishCount Int      @default(3)
+  mealType      String   // "定价餐" or "自助餐"
+  historicalMenus Json   // 存储4个Excel解析后的菜单数据
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  // 关联的菜单记录
+  menus         Menu[]
+
+  @@map("canteens")
+}
+
+model Menu {
+  id               String   @id @default(cuid())
+  canteenId        String
+  weekMenu         Json     // 存储一周5天的菜单数据
+  generationParams Json     // 存储生成时的参数配置
+  createdAt        DateTime @default(now())
+  
+  // 关联到食堂
+  canteen          Canteen  @relation(fields: [canteenId], references: [id], onDelete: Cascade)
+
+  @@map("menus")
+}

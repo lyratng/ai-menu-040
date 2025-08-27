@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { Card, Button, Space, Typography, Layout } from 'antd'
 import { BookFilled, LoginOutlined, UserAddOutlined } from '@ant-design/icons'
 import LoginForm from '../components/LoginForm'

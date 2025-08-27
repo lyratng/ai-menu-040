@@ -1,16 +1,16 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   Layout, Card, Form, Button, Space, Typography, Select, InputNumber, 
-  Checkbox, Radio, Table, message, Spin, Alert 
+  Checkbox, Radio, Table, message, Spin 
 } from 'antd'
 import { 
   BookFilled, LogoutOutlined, DownloadOutlined, 
   ReloadOutlined, HistoryOutlined 
 } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
-import type { GenerationParams, WeekMenu, DishItem } from '@/types'
+import type { GenerationParams, WeekMenu } from '@/types'
 import * as XLSX from 'xlsx'
 
 const { Header, Content } = Layout
@@ -33,11 +33,7 @@ export default function Dashboard() {
   const [form] = Form.useForm()
   const router = useRouter()
 
-  useEffect(() => {
-    checkAuth()
-  }, [])
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me')
       if (response.ok) {
@@ -52,7 +48,11 @@ export default function Dashboard() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
+
+  useEffect(() => {
+    checkAuth()
+  }, [checkAuth])
 
   const handleLogout = async () => {
     try {
@@ -63,7 +63,7 @@ export default function Dashboard() {
     }
   }
 
-  const generateMenu = async (values: any) => {
+  const generateMenu = async (values: Record<string, unknown>) => {
     if (!canteenInfo) return
 
     setGenerating(true)
@@ -111,7 +111,6 @@ export default function Dashboard() {
     if (!weekMenu || !canteenInfo) return
 
     const data = []
-    const maxRows = canteenInfo.hotDishCount + canteenInfo.coldDishCount
 
     // 创建表头
     data.push(['', '周一', '周二', '周三', '周四', '周五'])
@@ -390,7 +389,7 @@ function MenuTable({ weekMenu, hotDishCount, coldDishCount }: MenuTableProps) {
       dataIndex: 'type',
       key: 'type',
       width: 80,
-      render: (text: string, record: any, index: number) => {
+      render: (text: string, record: Record<string, unknown>, index: number) => {
         if (index < hotDishCount) {
           return index === 0 ? '热菜' : ''
         } else {

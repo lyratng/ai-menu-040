@@ -15,7 +15,7 @@ export async function createCanteen(data: {
   hotDishCount: number
   coldDishCount: number
   mealType: string
-  historicalMenus: any[]
+  historicalMenus: string[][]
 }) {
   const hashedPassword = await hashPassword(data.password)
   
@@ -43,6 +43,7 @@ export async function authenticateCanteen(canteenName: string, password: string)
   }
 
   // 返回除密码外的所有数据
-  const { password: _, ...canteenData } = canteen
+  const { password: _password, ...canteenData } = canteen
+  void _password // 显式标记为已使用
   return canteenData
 }

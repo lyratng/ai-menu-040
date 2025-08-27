@@ -24,7 +24,7 @@ interface RegisterFormData {
 export default function RegisterForm({ onBack }: RegisterFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [historicalMenus, setHistoricalMenus] = useState<any[]>([])
+  const [historicalMenus, setHistoricalMenus] = useState<string[][]>([])
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
 
@@ -43,7 +43,7 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
           const dishes: string[] = []
           
           // 遍历所有行和列，提取所有菜名
-          jsonData.forEach((row: any) => {
+          jsonData.forEach((row: unknown) => {
             if (Array.isArray(row)) {
               // 遍历每行的所有列（A-E列，即索引0-4）
               for (let colIndex = 0; colIndex < 5; colIndex++) {

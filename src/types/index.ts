@@ -4,7 +4,7 @@ export interface Canteen {
   hotDishCount: number
   coldDishCount: number
   mealType: string
-  historicalMenus: any[]
+  historicalMenus: string[][]
   createdAt: Date
   updatedAt: Date
 }

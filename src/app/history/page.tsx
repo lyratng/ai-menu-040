@@ -1,9 +1,9 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { 
   Layout, Card, Space, Typography, Table, message, Spin, 
-  Button, Tabs, Tag, Collapse, List
+  Button, Tabs, Tag, Collapse
 } from 'antd'
 import { 
   ArrowLeftOutlined, BookFilled, HistoryOutlined, 
@@ -23,7 +23,7 @@ interface HistoryData {
   generatedMenus: Array<{
     id: string
     weekMenu: WeekMenu
-    generationParams: any
+    generationParams: object
     createdAt: string
   }>
 }
@@ -35,9 +35,9 @@ export default function HistoryPage() {
 
   useEffect(() => {
     fetchHistoryMenus()
-  }, [])
+  }, [fetchHistoryMenus])
 
-  const fetchHistoryMenus = async () => {
+  const fetchHistoryMenus = useCallback(async () => {
     try {
       const response = await fetch('/api/history-menus')
       if (response.ok) {
@@ -54,7 +54,7 @@ export default function HistoryPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [router])
 
   const goBack = () => {
     router.push('/dashboard')

@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/db'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // 验证身份
     const cookieStore = await cookies()
@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { canteenId: string }
     
     // 获取食堂信息和历史菜单
     const canteen = await prisma.canteen.findUnique({
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
       success: true,
       data: {
         canteenName: canteen.canteenName,
-        uploadedMenus: canteen.historicalMenus as any[], // 上传的4个Excel菜单
+        uploadedMenus: canteen.historicalMenus as string[][], // 上传的4个Excel菜单
         generatedMenus: generatedMenus, // 生成的菜单记录
       },
     })

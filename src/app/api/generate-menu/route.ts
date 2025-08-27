@@ -58,9 +58,9 @@ const databases = {
 }
 
 function buildPrompt(
-  canteen: any,
+  canteen: { hotDishCount: number; coldDishCount: number },
   params: GenerationParams,
-  historicalMenus: any[]
+  historicalMenus: string[][]
 ): string {
   const mappings = promptTemplate.parameterMappings
   
@@ -156,7 +156,7 @@ ${historicalMenuText}
   return prompt
 }
 
-async function callDeepseekAPI(prompt: string): Promise<any> {
+async function callDeepseekAPI(prompt: string): Promise<string> {
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
@@ -222,7 +222,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as any
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { canteenId: string }
     
     // 获取请求数据
     const body = await request.json()
@@ -252,7 +252,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 构建prompt
-    const prompt = buildPrompt(canteen, params, canteen.historicalMenus as any[])
+    const prompt = buildPrompt(canteen, params, canteen.historicalMenus as string[][])
     
     // 调用AI API
     let weekMenu: WeekMenu | null = null
@@ -284,8 +284,8 @@ export async function POST(request: NextRequest) {
     const menu = await prisma.menu.create({
       data: {
         canteenId,
-        weekMenu: weekMenu as any,
-        generationParams: params as any,
+        weekMenu: weekMenu as object,
+        generationParams: params as object,
       },
     })
 

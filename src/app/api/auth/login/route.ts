@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateCanteen } from '@/lib/auth'
-import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 
 export async function POST(request: NextRequest) {

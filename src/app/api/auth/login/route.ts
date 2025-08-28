@@ -32,23 +32,25 @@ export async function POST(request: NextRequest) {
       { expiresIn: '7d' }
     )
 
-    // 设置cookie
-    const cookieStore = await cookies()
-    cookieStore.set('auth-token', token, {
+    console.log('Login successful, setting cookie for:', canteen.canteenName)
+    
+    // 创建响应并设置cookie
+    const response = NextResponse.json({
+      success: true,
+      canteen,
+    })
+
+    // 使用 NextResponse 的 cookies 方法设置 cookie
+    response.cookies.set('auth-token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
-      path: '/', // 确保 cookie 在整个域名下可用
-      // 不设置 domain，让浏览器自动使用当前域名
+      path: '/',
     })
 
-    console.log('Login successful, cookie set for:', canteen.canteenName)
-    
-    return NextResponse.json({
-      success: true,
-      canteen,
-    })
+    console.log('Cookie set successfully')
+    return response
 
   } catch (error) {
     console.error('Login error:', error)

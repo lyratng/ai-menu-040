@@ -3,20 +3,22 @@ import { cookies } from 'next/headers'
 
 export async function POST() {
   try {
-    const cookieStore = await cookies()
-    
+    // 创建响应并清除cookie
+    const response = NextResponse.json({
+      success: true,
+      message: '已成功退出登录',
+    })
+
     // 清除认证cookie
-    cookieStore.set('auth-token', '', {
+    response.cookies.set('auth-token', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 0, // 立即过期
+      path: '/',
     })
 
-    return NextResponse.json({
-      success: true,
-      message: '已成功退出登录',
-    })
+    return response
 
   } catch (error) {
     console.error('Logout error:', error)

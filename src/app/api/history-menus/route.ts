@@ -16,7 +16,7 @@ export async function GET() {
       )
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as { canteenId: string }
+    const decoded = jwt.verify(token, process.env.NEXTAUTH_SECRET || 'fallback-secret') as { canteenId: string }
     
     // 获取食堂信息和历史菜单
     const canteen = await prisma.canteen.findUnique({

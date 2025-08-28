@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/', // 确保 cookie 在整个域名下可用
-      domain: process.env.NODE_ENV === 'production' ? '.ai-menu.tech' : undefined, // 设置正确的域名
+      // 不设置 domain，让浏览器自动使用当前域名
     })
 
     console.log('Login successful, cookie set for:', canteen.canteenName)

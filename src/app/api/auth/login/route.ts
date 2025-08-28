@@ -39,8 +39,12 @@ export async function POST(request: NextRequest) {
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/', // 确保 cookie 在整个域名下可用
+      domain: process.env.NODE_ENV === 'production' ? '.ai-menu.tech' : undefined, // 设置正确的域名
     })
 
+    console.log('Login successful, cookie set for:', canteen.canteenName)
+    
     return NextResponse.json({
       success: true,
       canteen,

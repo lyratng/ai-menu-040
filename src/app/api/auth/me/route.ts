@@ -8,7 +8,10 @@ export async function GET() {
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
 
+    console.log('Auth check - Token found:', !!token)
+    
     if (!token) {
+      console.log('Auth check failed - No token found')
       return NextResponse.json(
         { error: '未登录' },
         { status: 401 }

@@ -326,7 +326,7 @@ export default function Dashboard() {
                   </Radio.Group>
                 </Form.Item>
 
-                <Form.Item name="flavorDiversity" valuePropName="checked" label=" ">
+                <Form.Item name="flavorDiversity" valuePropName="checked" label="风味多样性要求">
                   <Checkbox>每餐风味不少于5种</Checkbox>
                 </Form.Item>
               </div>

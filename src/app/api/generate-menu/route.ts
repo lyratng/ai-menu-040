@@ -171,6 +171,10 @@ ${historicalMenuText}
 }
 
 async function callDeepseekAPI(prompt: string): Promise<string> {
+  console.log('DeepSeek API call starting...')
+  console.log('API Key exists:', !!process.env.DEEPSEEK_API_KEY)
+  console.log('Prompt length:', prompt.length)
+  
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
     headers: {
@@ -190,12 +194,23 @@ async function callDeepseekAPI(prompt: string): Promise<string> {
     }),
   })
 
+  console.log('DeepSeek API response status:', response.status)
+  console.log('DeepSeek API response ok:', response.ok)
+
   if (!response.ok) {
-    throw new Error(`Deepseek API error: ${response.status}`)
+    const errorText = await response.text()
+    console.error('DeepSeek API error response:', errorText)
+    throw new Error(`Deepseek API error: ${response.status} - ${errorText}`)
   }
 
   const data = await response.json()
-  return data.choices[0]?.message?.content
+  console.log('DeepSeek API response data keys:', Object.keys(data))
+  console.log('Choices length:', data.choices?.length || 0)
+  
+  const content = data.choices[0]?.message?.content
+  console.log('Extracted content length:', content?.length || 0)
+  
+  return content
 }
 
 function parseMenuResponse(content: string): WeekMenu | null {
@@ -316,19 +331,40 @@ export async function POST(request: NextRequest) {
     let attempts = 0
     const maxAttempts = 3
 
+    console.log('=== Starting AI API calls ===')
+    console.log('Total attempts allowed:', maxAttempts)
+
     while (!weekMenu && attempts < maxAttempts) {
       attempts++
+      console.log(`\n--- Attempt ${attempts}/${maxAttempts} ---`)
+      
       try {
+        console.log('Calling DeepSeek API...')
         const aiResponse = await callDeepseekAPI(prompt)
+        console.log('AI Response received, length:', aiResponse?.length || 0)
+        console.log('AI Response preview:', aiResponse?.substring(0, 500) + '...')
+        
+        console.log('Parsing AI response...')
         weekMenu = parseMenuResponse(aiResponse)
         
         if (!weekMenu) {
           console.warn(`Attempt ${attempts}: Failed to parse AI response`)
+          console.warn('Full AI response:', aiResponse)
+        } else {
+          console.log(`Attempt ${attempts}: Successfully parsed menu!`)
+          console.log('Menu structure:', Object.keys(weekMenu))
         }
       } catch (error) {
         console.error(`Attempt ${attempts}: AI API call failed:`, error)
+        if (error instanceof Error) {
+          console.error('Error message:', error.message)
+          console.error('Error stack:', error.stack)
+        }
       }
     }
+
+    console.log('=== AI API calls completed ===')
+    console.log('Final result - weekMenu exists:', !!weekMenu)
 
     if (!weekMenu) {
       return NextResponse.json(

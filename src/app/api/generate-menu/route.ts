@@ -135,17 +135,22 @@ ${historicalMenuText}
     {"name": "蒜苗西兰花", "category": "hot", "type": "vegetarian", "isHistorical": false},
     {"name": "凉拌黄瓜", "category": "cold", "type": "cold", "isHistorical": false}
   ],
-  "tuesday": [...],
-  "wednesday": [...],
-  "thursday": [...],
-  "friday": [...]
+  "tuesday": [
+    {"name": "红烧狮子头", "category": "hot", "type": "mainMeat", "isHistorical": false},
+    {"name": "木须肉", "category": "hot", "type": "halfMeat", "isHistorical": true},
+    {"name": "醋溜白菜", "category": "hot", "type": "vegetarian", "isHistorical": false},
+    {"name": "凉拌海带丝", "category": "cold", "type": "cold", "isHistorical": false}
+  ],
+  "wednesday": [完整的菜品列表],
+  "thursday": [完整的菜品列表],
+  "friday": [完整的菜品列表]
 }
 
-字段说明：
-- name: 菜品名称
-- category: "hot"(热菜) 或 "cold"(凉菜)
-- type: "mainMeat"(主荤菜) | "halfMeat"(半荤菜) | "vegetarian"(素菜) | "cold"(凉菜)
-- isHistorical: true(历史菜单中的菜品) 或 false(原创菜品)
+【重要】每个字段必须填写：
+- name: 菜品名称（字符串）
+- category: 必须是 "hot" 或 "cold"
+- type: 必须是 "mainMeat"、"halfMeat"、"vegetarian" 或 "cold"
+- isHistorical: 必须是 true 或 false
 
 请确保：
 1. 每天菜品数量严格等于${canteen.hotDishCount + canteen.coldDishCount}道
@@ -210,17 +215,53 @@ function parseMenuResponse(content: string): WeekMenu | null {
         throw new Error(`Invalid menu structure for ${day}`)
       }
       
-      // 验证每道菜的结构
-      for (const dish of menuData[day]) {
-        if (!dish.name || !dish.category || !dish.type || typeof dish.isHistorical !== 'boolean') {
-          throw new Error(`Invalid dish structure in ${day}: ${JSON.stringify(dish)}`)
+      // 兼容旧格式：如果是字符串数组，转换为新格式
+      if (menuData[day].length > 0 && typeof menuData[day][0] === 'string') {
+        console.log(`Converting old format for ${day}`)
+        menuData[day] = menuData[day].map((dishName: string) => {
+          // 解析旧格式的标记
+          const isHistorical = dishName.includes('(历史)')
+          const cleanName = dishName.replace(/\((主荤|半荤|素菜|凉菜)\)/g, '').replace(/\(历史\)/g, '').trim()
+          
+          let type = 'vegetarian'
+          let category = 'hot'
+          
+          if (dishName.includes('(主荤)')) {
+            type = 'mainMeat'
+            category = 'hot'
+          } else if (dishName.includes('(半荤)')) {
+            type = 'halfMeat'
+            category = 'hot'
+          } else if (dishName.includes('(素菜)')) {
+            type = 'vegetarian'
+            category = 'hot'
+          } else if (dishName.includes('(凉菜)')) {
+            type = 'cold'
+            category = 'cold'
+          }
+          
+          return {
+            name: cleanName,
+            category,
+            type,
+            isHistorical
+          }
+        })
+      } else {
+        // 验证新格式的每道菜结构
+        for (const dish of menuData[day]) {
+          if (!dish.name || !dish.category || !dish.type || typeof dish.isHistorical !== 'boolean') {
+            throw new Error(`Invalid dish structure in ${day}: ${JSON.stringify(dish)}`)
+          }
         }
       }
     }
 
+    console.log('Parsed menu data:', JSON.stringify(menuData, null, 2))
     return menuData as WeekMenu
   } catch (error) {
     console.error('Failed to parse menu response:', error)
+    console.error('Content:', content)
     return null
   }
 }

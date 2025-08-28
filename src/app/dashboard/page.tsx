@@ -110,6 +110,31 @@ export default function Dashboard() {
   const exportToExcel = () => {
     if (!weekMenu || !canteenInfo) return
 
+    // 排序函数
+    const sortDishes = (dishes: import('@/types').DishItem[]) => {
+      const hotDishes = dishes.filter(dish => dish.category === 'hot')
+      const coldDishes = dishes.filter(dish => dish.category === 'cold')
+      
+      // 热菜按类型排序：主荤 → 半荤 → 素菜
+      const typeOrder = { 'mainMeat': 1, 'halfMeat': 2, 'vegetarian': 3 }
+      hotDishes.sort((a, b) => {
+        const aOrder = typeOrder[a.type as keyof typeof typeOrder] || 999
+        const bOrder = typeOrder[b.type as keyof typeof typeOrder] || 999
+        return aOrder - bOrder
+      })
+      
+      return [...hotDishes, ...coldDishes]
+    }
+
+    // 对每天的菜品进行排序
+    const sortedDays = {
+      monday: sortDishes(weekMenu.monday),
+      tuesday: sortDishes(weekMenu.tuesday),
+      wednesday: sortDishes(weekMenu.wednesday),
+      thursday: sortDishes(weekMenu.thursday),
+      friday: sortDishes(weekMenu.friday),
+    }
+
     const data = []
 
     // 创建表头
@@ -120,11 +145,11 @@ export default function Dashboard() {
       const rowLabel = i === 0 ? '热菜' : ''
       data.push([
         rowLabel,
-        weekMenu.monday[i] || '',
-        weekMenu.tuesday[i] || '',
-        weekMenu.wednesday[i] || '',
-        weekMenu.thursday[i] || '',
-        weekMenu.friday[i] || '',
+        sortedDays.monday[i]?.name || '',
+        sortedDays.tuesday[i]?.name || '',
+        sortedDays.wednesday[i]?.name || '',
+        sortedDays.thursday[i]?.name || '',
+        sortedDays.friday[i]?.name || '',
       ])
     }
 
@@ -134,11 +159,11 @@ export default function Dashboard() {
       const hotIndex = canteenInfo.hotDishCount
       data.push([
         rowLabel,
-        weekMenu.monday[hotIndex + i] || '',
-        weekMenu.tuesday[hotIndex + i] || '',
-        weekMenu.wednesday[hotIndex + i] || '',
-        weekMenu.thursday[hotIndex + i] || '',
-        weekMenu.friday[hotIndex + i] || '',
+        sortedDays.monday[hotIndex + i]?.name || '',
+        sortedDays.tuesday[hotIndex + i]?.name || '',
+        sortedDays.wednesday[hotIndex + i]?.name || '',
+        sortedDays.thursday[hotIndex + i]?.name || '',
+        sortedDays.friday[hotIndex + i]?.name || '',
       ])
     }
 
@@ -383,6 +408,22 @@ interface MenuTableProps {
 }
 
 function MenuTable({ weekMenu, hotDishCount, coldDishCount }: MenuTableProps) {
+  // 对菜品进行排序：热菜在上（主荤→半荤→素菜），凉菜在下
+  const sortDishes = (dishes: import('@/types').DishItem[]) => {
+    const hotDishes = dishes.filter(dish => dish.category === 'hot')
+    const coldDishes = dishes.filter(dish => dish.category === 'cold')
+    
+    // 热菜按类型排序：主荤 → 半荤 → 素菜
+    const typeOrder = { 'mainMeat': 1, 'halfMeat': 2, 'vegetarian': 3 }
+    hotDishes.sort((a, b) => {
+      const aOrder = typeOrder[a.type as keyof typeof typeOrder] || 999
+      const bOrder = typeOrder[b.type as keyof typeof typeOrder] || 999
+      return aOrder - bOrder
+    })
+    
+    return [...hotDishes, ...coldDishes]
+  }
+
   const columns = [
     {
       title: '类型',
@@ -401,28 +442,105 @@ function MenuTable({ weekMenu, hotDishCount, coldDishCount }: MenuTableProps) {
       title: '周一',
       dataIndex: 'monday',
       key: 'monday',
+      render: (dish: import('@/types').DishItem) => (
+        <div>
+          <div>{dish?.name || ''}</div>
+          {dish && (
+            <div className="text-xs text-gray-500">
+              {dish.type === 'mainMeat' && '主荤'}
+              {dish.type === 'halfMeat' && '半荤'}
+              {dish.type === 'vegetarian' && '素菜'}
+              {dish.type === 'cold' && '凉菜'}
+              {dish.isHistorical && ' · 历史'}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: '周二',
       dataIndex: 'tuesday',
       key: 'tuesday',
+      render: (dish: import('@/types').DishItem) => (
+        <div>
+          <div>{dish?.name || ''}</div>
+          {dish && (
+            <div className="text-xs text-gray-500">
+              {dish.type === 'mainMeat' && '主荤'}
+              {dish.type === 'halfMeat' && '半荤'}
+              {dish.type === 'vegetarian' && '素菜'}
+              {dish.type === 'cold' && '凉菜'}
+              {dish.isHistorical && ' · 历史'}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: '周三',
       dataIndex: 'wednesday',
       key: 'wednesday',
+      render: (dish: import('@/types').DishItem) => (
+        <div>
+          <div>{dish?.name || ''}</div>
+          {dish && (
+            <div className="text-xs text-gray-500">
+              {dish.type === 'mainMeat' && '主荤'}
+              {dish.type === 'halfMeat' && '半荤'}
+              {dish.type === 'vegetarian' && '素菜'}
+              {dish.type === 'cold' && '凉菜'}
+              {dish.isHistorical && ' · 历史'}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: '周四',
       dataIndex: 'thursday',
       key: 'thursday',
+      render: (dish: import('@/types').DishItem) => (
+        <div>
+          <div>{dish?.name || ''}</div>
+          {dish && (
+            <div className="text-xs text-gray-500">
+              {dish.type === 'mainMeat' && '主荤'}
+              {dish.type === 'halfMeat' && '半荤'}
+              {dish.type === 'vegetarian' && '素菜'}
+              {dish.type === 'cold' && '凉菜'}
+              {dish.isHistorical && ' · 历史'}
+            </div>
+          )}
+        </div>
+      )
     },
     {
       title: '周五',
       dataIndex: 'friday',
       key: 'friday',
+      render: (dish: import('@/types').DishItem) => (
+        <div>
+          <div>{dish?.name || ''}</div>
+          {dish && (
+            <div className="text-xs text-gray-500">
+              {dish.type === 'mainMeat' && '主荤'}
+              {dish.type === 'halfMeat' && '半荤'}
+              {dish.type === 'vegetarian' && '素菜'}
+              {dish.type === 'cold' && '凉菜'}
+              {dish.isHistorical && ' · 历史'}
+            </div>
+          )}
+        </div>
+      )
     },
   ]
+
+  // 对每天的菜品进行排序
+  const sortedMonday = sortDishes(weekMenu.monday)
+  const sortedTuesday = sortDishes(weekMenu.tuesday)
+  const sortedWednesday = sortDishes(weekMenu.wednesday)
+  const sortedThursday = sortDishes(weekMenu.thursday)
+  const sortedFriday = sortDishes(weekMenu.friday)
 
   const dataSource = []
   const maxRows = hotDishCount + coldDishCount
@@ -431,11 +549,11 @@ function MenuTable({ weekMenu, hotDishCount, coldDishCount }: MenuTableProps) {
     dataSource.push({
       key: i,
       type: i < hotDishCount ? '热菜' : '凉菜',
-      monday: weekMenu.monday[i] || '',
-      tuesday: weekMenu.tuesday[i] || '',
-      wednesday: weekMenu.wednesday[i] || '',
-      thursday: weekMenu.thursday[i] || '',
-      friday: weekMenu.friday[i] || '',
+      monday: sortedMonday[i],
+      tuesday: sortedTuesday[i],
+      wednesday: sortedWednesday[i],
+      thursday: sortedThursday[i],
+      friday: sortedFriday[i],
     })
   }
 

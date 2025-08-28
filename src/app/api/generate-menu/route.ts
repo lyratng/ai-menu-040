@@ -127,16 +127,25 @@ ${historicalMenuText}
 为了最佳的用餐体验，建议每天安排大约${Math.round(historicalDishCount/5)}道左右的历史菜（可以有1-2道的浮动），让历史经典菜品和创新菜品在每一天都有合理的搭配。
 
 【输出要求】
-请严格按照JSON格式输出，包含周一到周五的菜单：
+请严格按照JSON格式输出，每道菜包含详细信息：
 {
-  "monday": ["菜品1(主荤)", "菜品2(半荤)", "菜品3(素菜)", "菜品4(凉菜)"],
-  "tuesday": ["菜品1(主荤)", "菜品2(半荤)", "菜品3(素菜)", "菜品4(凉菜)"],
-  "wednesday": ["菜品1(主荤)", "菜品2(半荤)", "菜品3(素菜)", "菜品4(凉菜)"],
-  "thursday": ["菜品1(主荤)", "菜品2(半荤)", "菜品3(素菜)", "菜品4(凉菜)"],
-  "friday": ["菜品1(主荤)", "菜品2(半荤)", "菜品3(素菜)", "菜品4(凉菜)"]
+  "monday": [
+    {"name": "可乐鸡翅", "category": "hot", "type": "mainMeat", "isHistorical": true},
+    {"name": "青笋炒肉片", "category": "hot", "type": "halfMeat", "isHistorical": false},
+    {"name": "蒜苗西兰花", "category": "hot", "type": "vegetarian", "isHistorical": false},
+    {"name": "凉拌黄瓜", "category": "cold", "type": "cold", "isHistorical": false}
+  ],
+  "tuesday": [...],
+  "wednesday": [...],
+  "thursday": [...],
+  "friday": [...]
 }
 
-如果菜品来源于历史菜单，请额外标注(历史)，如：可乐鸡翅(主荤)(历史)
+字段说明：
+- name: 菜品名称
+- category: "hot"(热菜) 或 "cold"(凉菜)
+- type: "mainMeat"(主荤菜) | "halfMeat"(半荤菜) | "vegetarian"(素菜) | "cold"(凉菜)
+- isHistorical: true(历史菜单中的菜品) 或 false(原创菜品)
 
 请确保：
 1. 每天菜品数量严格等于${canteen.hotDishCount + canteen.coldDishCount}道
@@ -199,6 +208,13 @@ function parseMenuResponse(content: string): WeekMenu | null {
     for (const day of days) {
       if (!menuData[day] || !Array.isArray(menuData[day])) {
         throw new Error(`Invalid menu structure for ${day}`)
+      }
+      
+      // 验证每道菜的结构
+      for (const dish of menuData[day]) {
+        if (!dish.name || !dish.category || !dish.type || typeof dish.isHistorical !== 'boolean') {
+          throw new Error(`Invalid dish structure in ${day}: ${JSON.stringify(dish)}`)
+        }
       }
     }
 

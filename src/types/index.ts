@@ -17,12 +17,19 @@ export interface Menu {
   createdAt: Date
 }
 
+export interface DishItem {
+  name: string
+  category: 'hot' | 'cold'  // 热菜 | 凉菜
+  type: 'mainMeat' | 'halfMeat' | 'vegetarian' | 'cold'  // 主荤 | 半荤 | 素菜 | 凉菜
+  isHistorical: boolean
+}
+
 export interface WeekMenu {
-  monday: string[]
-  tuesday: string[]
-  wednesday: string[]
-  thursday: string[]
-  friday: string[]
+  monday: DishItem[]
+  tuesday: DishItem[]
+  wednesday: DishItem[]
+  thursday: DishItem[]
+  friday: DishItem[]
 }
 
 export interface GenerationParams {
@@ -38,8 +45,4 @@ export interface GenerationParams {
   ingredientDiversity: string
 }
 
-export interface DishItem {
-  name: string
-  type: 'mainMeat' | 'halfMeat' | 'vegetarian' | 'cold'
-  isHistorical: boolean
-}
+

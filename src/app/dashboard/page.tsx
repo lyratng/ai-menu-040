@@ -1,3 +1,24 @@
+/**
+ * 团餐菜单生成工具 - 主控制面板
+ * 
+ * 这是系统的核心页面，提供完整的菜单生成和管理功能。
+ * 主要功能包括：
+ * 1. 用户身份验证和会话管理
+ * 2. 菜单生成参数配置界面
+ * 3. AI菜单生成调用和结果展示
+ * 4. Excel导出功能
+ * 5. 历史记录访问
+ * 
+ * 组件架构：
+ * - Dashboard: 主组件，管理整体状态和业务逻辑
+ * - MenuTable: 子组件，负责菜单表格展示
+ * 
+ * 状态管理：
+ * - canteenInfo: 当前登录食堂的基础信息
+ * - weekMenu: 生成的一周菜单数据
+ * - loading/generating: 各种加载状态控制
+ */
+
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
@@ -33,6 +54,14 @@ export default function Dashboard() {
   const [form] = Form.useForm()
   const router = useRouter()
 
+  /**
+   * 检查用户登录状态
+   * 
+   * 通过调用 /api/auth/me 验证当前用户的登录状态。
+   * 如果用户未登录或Token过期，会自动重定向到首页。
+   * 
+   * 使用useCallback优化性能，避免不必要的重复请求。
+   */
   const checkAuth = useCallback(async () => {
     try {
       const response = await fetch('/api/auth/me')
@@ -40,6 +69,7 @@ export default function Dashboard() {
         const data = await response.json()
         setCanteenInfo(data.canteen)
       } else {
+        // 认证失败，重定向到登录页
         router.push('/')
       }
     } catch (error) {
@@ -63,11 +93,24 @@ export default function Dashboard() {
     }
   }
 
+  /**
+   * 菜单生成核心函数
+   * 
+   * 处理用户提交的菜单生成请求，包括：
+   * 1. 参数类型转换和验证
+   * 2. API调用和响应处理
+   * 3. 用户界面状态更新
+   * 4. 错误处理和用户提示
+   * 
+   * @param values 来自Ant Design Form的表单数据
+   */
   const generateMenu = async (values: Record<string, unknown>) => {
     if (!canteenInfo) return
 
     setGenerating(true)
     try {
+      // 构建符合API要求的参数对象
+      // 注意：Form返回的数据类型需要显式转换
       const params: GenerationParams = {
         mainMeatCount: values.mainMeatCount as number,
         halfMeatCount: values.halfMeatCount as number,
@@ -81,6 +124,7 @@ export default function Dashboard() {
         ingredientDiversity: values.ingredientDiversity as string,
       }
 
+      // 调用菜单生成API
       const response = await fetch('/api/generate-menu', {
         method: 'POST',
         headers: {
@@ -107,17 +151,30 @@ export default function Dashboard() {
     }
   }
 
+  /**
+   * Excel导出功能
+   * 
+   * 将生成的一周菜单导出为Excel文件，格式化为厨房可直接使用的表格。
+   * 文件结构：横轴为周一到周五，纵轴为热菜和凉菜分区。
+   * 
+   * 数据处理逻辑：
+   * 1. 构建二维数组格式的表格数据
+   * 2. 热菜和凉菜分别成组显示
+   * 3. 使用XLSX库生成Excel文件
+   * 4. 自动下载到用户电脑
+   */
   const exportToExcel = () => {
     if (!weekMenu || !canteenInfo) return
 
     const data = []
 
-    // 创建表头
+    // 创建表头 - 第一行为周一到周五
     data.push(['', '周一', '周二', '周三', '周四', '周五'])
 
-    // 添加热菜
+    // 添加热菜区域
+    // 每一行代表一个菜品位置，第一行标注"热菜"
     for (let i = 0; i < canteenInfo.hotDishCount; i++) {
-      const rowLabel = i === 0 ? '热菜' : ''
+      const rowLabel = i === 0 ? '热菜' : ''  // 只在第一行显示分类标签
       data.push([
         rowLabel,
         weekMenu.monday[i] || '',
@@ -128,10 +185,11 @@ export default function Dashboard() {
       ])
     }
 
-    // 添加凉菜
+    // 添加凉菜区域
+    // 凉菜在菜单数组中位于热菜之后
     for (let i = 0; i < canteenInfo.coldDishCount; i++) {
-      const rowLabel = i === 0 ? '凉菜' : ''
-      const hotIndex = canteenInfo.hotDishCount
+      const rowLabel = i === 0 ? '凉菜' : ''  // 只在第一行显示分类标签
+      const hotIndex = canteenInfo.hotDishCount  // 凉菜的起始索引
       data.push([
         rowLabel,
         weekMenu.monday[hotIndex + i] || '',
@@ -142,10 +200,12 @@ export default function Dashboard() {
       ])
     }
 
+    // 使用XLSX库生成Excel文件
     const worksheet = XLSX.utils.aoa_to_sheet(data)
     const workbook = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(workbook, worksheet, '菜单')
 
+    // 生成带时间戳的文件名，便于区分不同批次的菜单
     const fileName = `${canteenInfo.canteenName}_菜单_${new Date().toISOString().split('T')[0]}.xlsx`
     XLSX.writeFile(workbook, fileName)
     message.success('菜单已导出到Excel文件')

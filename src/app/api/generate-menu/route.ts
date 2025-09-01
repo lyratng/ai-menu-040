@@ -1,10 +1,32 @@
+/**
+ * 团餐菜单生成API路由
+ * 
+ * 本文件实现了基于AI的智能菜单生成功能，是整个系统的核心业务逻辑。
+ * 主要功能：
+ * 1. 接收用户配置的菜单生成参数
+ * 2. 构建符合团餐规范的AI Prompt
+ * 3. 调用Deepseek API生成菜单
+ * 4. 解析和验证AI返回结果
+ * 5. 保存菜单到数据库
+ * 
+ * @author 技术开发团队
+ * @version 1.0.0
+ * @lastModified 2025-01-15
+ */
+
 import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import jwt from 'jsonwebtoken'
 import { prisma } from '@/lib/db'
 import type { GenerationParams, WeekMenu } from '@/types'
 
-// 导入配置数据
+/**
+ * AI Prompt模板配置
+ * 
+ * 这个配置对象定义了与AI交互的核心规则和参数映射。
+ * 包含了团餐行业的专业知识和约束条件，确保生成的菜单
+ * 符合实际运营需求。
+ */
 const promptTemplate = {
   "systemPrompt": "你是一位在中国团餐行业工作多年的经验丰富的厨师长。请严格按照以下【开菜规则】和【约束条件】，为团餐食堂生成一周五天的午餐菜谱。",
   
@@ -57,6 +79,24 @@ const databases = {
   "风味": "咸香、咸鲜、咸酸、蒜香、酸甜、香甜、葱香、咸辣、酸辣、辣、麻辣、甜辣、鲜辣、辣鲜、麻鲜、鲜香、醲香、香辣、孜然、复合、黑椒、酱香、酸香、甜、干香、咖喱、蜜汁、豉香、酒香、茄汁、奶香"
 }
 
+/**
+ * 构建AI菜单生成的Prompt
+ * 
+ * 这是整个系统最核心的函数之一，负责将用户的配置参数
+ * 转换为AI能够理解的专业指令。Prompt的质量直接影响
+ * 生成菜单的实用性和合理性。
+ * 
+ * @param canteen 食堂基础配置（热菜数量、凉菜数量）
+ * @param params 用户选择的生成参数
+ * @param historicalMenus 历史菜单数据，用于风格参考
+ * @returns 完整的AI Prompt字符串
+ * 
+ * 核心逻辑：
+ * 1. 根据参数映射规则转换用户配置
+ * 2. 计算历史菜与原创菜的数量分配
+ * 3. 构建包含约束条件的专业指令
+ * 4. 确保生成结果符合团餐运营规范
+ */
 function buildPrompt(
   canteen: { hotDishCount: number; coldDishCount: number },
   params: GenerationParams,
@@ -64,7 +104,8 @@ function buildPrompt(
 ): string {
   const mappings = promptTemplate.parameterMappings
   
-  // 构建设备要求
+  // 构建设备要求 - 这直接影响可生成的菜品类型
+  // 设备限制是硬约束，必须严格遵守，否则厨房无法执行
   let equipmentRequirement = "所有烹饪设备均充足，蒸屉、烤箱、砂锅、炖锅、烧炉的使用注重均衡协调"
   if (params.equipmentShortage && params.equipmentShortage.length > 0) {
     const requirements = params.equipmentShortage.map(item => 
@@ -81,11 +122,14 @@ function buildPrompt(
   const workRatioRequirement = mappings["菜品做工比例"][params.workRatio as keyof typeof mappings["菜品做工比例"]]
   
   // 计算菜单数量和历史菜占比
-  const totalDishesPerWeek = (canteen.hotDishCount + canteen.coldDishCount) * 5
-  const historicalDishCount = Math.round(totalDishesPerWeek * params.historicalRatio / 100)
-  const originalDishCount = totalDishesPerWeek - historicalDishCount
+  // 这个计算确保历史菜和原创菜的精确分配，避免AI生成时数量错误
+  const totalDishesPerWeek = (canteen.hotDishCount + canteen.coldDishCount) * 5  // 一周5天的总菜品数
+  const historicalDishCount = Math.round(totalDishesPerWeek * params.historicalRatio / 100)  // 历史菜数量
+  const originalDishCount = totalDishesPerWeek - historicalDishCount  // 原创菜数量
   
   // 构建历史菜单数据 - 限制为合理数量
+  // 提供给AI的历史菜单数据不宜过多，避免Prompt过长导致性能问题
+  // 同时确保有足够的选择余地，提高生成质量
   const historicalDishes = historicalMenus.flat().slice(0, historicalDishCount + 10) // 只提供稍多于需要的数量
   const historicalMenuText = historicalDishes.join('、')
   
@@ -156,6 +200,16 @@ ${historicalMenuText}
   return prompt
 }
 
+/**
+ * 调用Deepseek AI API生成菜单
+ * 
+ * 封装与AI服务的交互逻辑，处理API调用和错误处理。
+ * 使用temperature=0.7确保既有创意又相对稳定的输出。
+ * 
+ * @param prompt 构建好的AI指令
+ * @returns AI返回的原始文本内容
+ * @throws Error 当API调用失败时抛出错误
+ */
 async function callDeepseekAPI(prompt: string): Promise<string> {
   const response = await fetch('https://api.deepseek.com/chat/completions', {
     method: 'POST',
@@ -184,6 +238,21 @@ async function callDeepseekAPI(prompt: string): Promise<string> {
   return data.choices[0]?.message?.content
 }
 
+/**
+ * 解析AI返回的菜单数据
+ * 
+ * AI可能返回包含额外文本的响应，需要提取其中的JSON部分
+ * 并验证数据结构的完整性。这是确保系统稳定性的关键步骤。
+ * 
+ * @param content AI返回的原始文本
+ * @returns 解析后的菜单对象，失败时返回null
+ * 
+ * 解析步骤：
+ * 1. 使用正则表达式提取JSON部分
+ * 2. 验证JSON格式是否正确
+ * 3. 检查必需的数据结构（周一到周五）
+ * 4. 确保每天的菜单都是数组格式
+ */
 function parseMenuResponse(content: string): WeekMenu | null {
   try {
     // 尝试提取JSON部分
@@ -209,9 +278,28 @@ function parseMenuResponse(content: string): WeekMenu | null {
   }
 }
 
+/**
+ * 菜单生成API的主处理函数
+ * 
+ * 这是整个菜单生成流程的入口点，协调各个子模块完成
+ * 从参数验证到菜单保存的完整流程。
+ * 
+ * 处理流程：
+ * 1. JWT身份验证
+ * 2. 参数验证和权限检查
+ * 3. 获取食堂信息和历史菜单
+ * 4. 构建AI Prompt
+ * 5. 调用AI API（支持重试机制）
+ * 6. 解析和验证结果
+ * 7. 保存到数据库
+ * 8. 维护历史记录数量限制
+ * 
+ * @param request Next.js请求对象
+ * @returns JSON响应，包含生成的菜单或错误信息
+ */
 export async function POST(request: NextRequest) {
   try {
-    // 验证身份
+    // 验证身份 - 确保只有登录用户才能生成菜单
     const cookieStore = await cookies()
     const token = cookieStore.get('auth-token')?.value
 
@@ -251,13 +339,14 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 构建prompt
+    // 构建prompt - 将用户参数转换为AI能理解的专业指令
     const prompt = buildPrompt(canteen, params, canteen.historicalMenus as string[][])
     
-    // 调用AI API
+    // 调用AI API - 实现重试机制提高成功率
+    // AI API可能因为网络或服务问题偶尔失败，重试可以显著提高用户体验
     let weekMenu: WeekMenu | null = null
     let attempts = 0
-    const maxAttempts = 3
+    const maxAttempts = 3  // 最多重试3次
 
     while (!weekMenu && attempts < maxAttempts) {
       attempts++
@@ -289,13 +378,15 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    // 保持最多4份菜单记录
+    // 保持最多4份菜单记录 - 防止数据库无限增长
+    // 删除最旧的记录，为每个食堂维护合理的历史记录数量
     const allMenus = await prisma.menu.findMany({
       where: { canteenId },
       orderBy: { createdAt: 'desc' },
     })
 
     if (allMenus.length > 4) {
+      // 删除第5个及之后的记录（保留最新的4个）
       await prisma.menu.deleteMany({
         where: {
           id: {

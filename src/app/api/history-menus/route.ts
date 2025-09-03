@@ -25,6 +25,7 @@ export async function GET() {
         id: true,
         canteenName: true,
         historicalMenus: true,
+        updatedAt: true,
       },
     })
 
@@ -47,6 +48,7 @@ export async function GET() {
       data: {
         canteenName: canteen.canteenName,
         uploadedMenus: canteen.historicalMenus as string[][], // 上传的4个Excel菜单
+        updatedAt: canteen.updatedAt, // 历史菜单最后更新时间
         generatedMenus: generatedMenus, // 生成的菜单记录
       },
     })

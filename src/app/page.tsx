@@ -2,15 +2,17 @@
 
 import { useState } from 'react'
 import { Card, Button, Space, Typography, Layout } from 'antd'
-import { BookFilled, LoginOutlined, UserAddOutlined } from '@ant-design/icons'
+import { BookFilled, LoginOutlined, UserAddOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import LoginForm from '../components/LoginForm'
 import RegisterForm from '../components/RegisterForm'
+import VideoGuideModal from '../components/VideoGuideModal'
 
 const { Title, Paragraph } = Typography
 const { Content } = Layout
 
 export default function Home() {
   const [currentView, setCurrentView] = useState<'home' | 'login' | 'register'>('home')
+  const [videoModalVisible, setVideoModalVisible] = useState(false)
 
   return (
     <Layout className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -46,6 +48,16 @@ export default function Home() {
                     新食堂注册
                   </Button>
                 </Space>
+                
+                {/* 操作指导按钮 */}
+                <Button 
+                  type="link" 
+                  icon={<PlayCircleOutlined />}
+                  className="text-blue-500 hover:text-blue-600"
+                  onClick={() => setVideoModalVisible(true)}
+                >
+                  操作指导
+                </Button>
               </Space>
             </Card>
           )}
@@ -59,6 +71,12 @@ export default function Home() {
           )}
         </div>
       </Content>
+      
+      {/* 视频指导弹窗 */}
+      <VideoGuideModal 
+        visible={videoModalVisible}
+        onClose={() => setVideoModalVisible(false)}
+      />
     </Layout>
   )
 }

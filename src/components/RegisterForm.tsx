@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { Card, Form, Input, Button, Space, Typography, Alert, message, InputNumber, Radio, Upload } from 'antd'
-import { ArrowLeftOutlined, UserAddOutlined, UploadOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, UserAddOutlined, UploadOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import type { UploadFile } from 'antd'
 import * as XLSX from 'xlsx'
+import VideoGuideModal from './VideoGuideModal'
 
 const { Title } = Typography
 
@@ -24,6 +25,7 @@ interface RegisterFormData {
 export default function RegisterForm({ onBack }: RegisterFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [videoModalVisible, setVideoModalVisible] = useState(false)
   const [historicalMenus, setHistoricalMenus] = useState<string[][]>([])
   const [fileList, setFileList] = useState<UploadFile[]>([])
   const [form] = Form.useForm()
@@ -142,19 +144,27 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
   }
 
   return (
-    <Card className="shadow-lg">
-      <Space direction="vertical" size="large" className="w-full">
-        <div className="flex items-center justify-between">
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
-            onClick={onBack}
-          >
-            返回
-          </Button>
-          <Title level={3} className="mb-0">食堂注册</Title>
-          <div></div>
-        </div>
+    <>
+      <Card className="shadow-lg">
+        <Space direction="vertical" size="large" className="w-full">
+          <div className="flex items-center justify-between">
+            <Button 
+              type="text" 
+              icon={<ArrowLeftOutlined />} 
+              onClick={onBack}
+            >
+              返回
+            </Button>
+            <Title level={3} className="mb-0">食堂注册</Title>
+            <Button 
+              type="text" 
+              icon={<PlayCircleOutlined />}
+              className="text-blue-500 hover:text-blue-600"
+              onClick={() => setVideoModalVisible(true)}
+            >
+              操作指导
+            </Button>
+          </div>
 
         {error && (
           <Alert
@@ -280,5 +290,12 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
         </Form>
       </Space>
     </Card>
+    
+    {/* 视频指导弹窗 */}
+    <VideoGuideModal 
+      visible={videoModalVisible}
+      onClose={() => setVideoModalVisible(false)}
+    />
+    </>
   )
 }

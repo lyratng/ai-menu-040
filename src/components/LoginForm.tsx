@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { Card, Form, Input, Button, Space, Typography, Alert, message } from 'antd'
-import { ArrowLeftOutlined, LoginOutlined } from '@ant-design/icons'
+import { ArrowLeftOutlined, LoginOutlined, PlayCircleOutlined } from '@ant-design/icons'
 import { useRouter } from 'next/navigation'
+import VideoGuideModal from './VideoGuideModal'
 
 const { Title } = Typography
 
@@ -19,6 +20,7 @@ interface LoginFormData {
 export default function LoginForm({ onBack }: LoginFormProps) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [videoModalVisible, setVideoModalVisible] = useState(false)
   const router = useRouter()
   const [form] = Form.useForm()
 
@@ -53,19 +55,27 @@ export default function LoginForm({ onBack }: LoginFormProps) {
   }
 
   return (
-    <Card className="shadow-lg">
-      <Space direction="vertical" size="large" className="w-full">
-        <div className="flex items-center justify-between">
-          <Button 
-            type="text" 
-            icon={<ArrowLeftOutlined />} 
-            onClick={onBack}
-          >
-            返回
-          </Button>
-          <Title level={3} className="mb-0">食堂登录</Title>
-          <div></div>
-        </div>
+    <>
+      <Card className="shadow-lg">
+        <Space direction="vertical" size="large" className="w-full">
+          <div className="flex items-center justify-between">
+            <Button 
+              type="text" 
+              icon={<ArrowLeftOutlined />} 
+              onClick={onBack}
+            >
+              返回
+            </Button>
+            <Title level={3} className="mb-0">食堂登录</Title>
+            <Button 
+              type="text" 
+              icon={<PlayCircleOutlined />}
+              className="text-blue-500 hover:text-blue-600"
+              onClick={() => setVideoModalVisible(true)}
+            >
+              操作指导
+            </Button>
+          </div>
 
         {error && (
           <Alert
@@ -119,5 +129,12 @@ export default function LoginForm({ onBack }: LoginFormProps) {
         </Form>
       </Space>
     </Card>
+    
+    {/* 视频指导弹窗 */}
+    <VideoGuideModal 
+      visible={videoModalVisible}
+      onClose={() => setVideoModalVisible(false)}
+    />
+    </>
   )
 }
